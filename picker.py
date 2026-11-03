@@ -1,11 +1,11 @@
-"""Pipette écran : portail XDG (Wayland/GNOME/KDE) ou superposition plein écran (X11/Windows/macOS)."""
+"""Pipette écran : NSColorSampler (macOS), portail XDG (Wayland) ou superposition plein écran (X11/Windows)."""
 from __future__ import annotations
 
 import os
 import secrets
 import sys
 
-from PySide6.QtCore import QPoint, QRect, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QObject, QPoint, QRect, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QColor, QCursor, QFont, QGuiApplication, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
@@ -24,6 +24,49 @@ def portal_available() -> bool:
         return True
     except ImportError:
         return False
+
+
+def is_macos() -> bool:
+    return sys.platform == "darwin"
+
+
+def mac_sampler_available() -> bool:
+    if not is_macos():
+        return False
+    try:
+        from AppKit import NSColorSampler  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+class MacColorSampler(QObject):
+    """Pipette native macOS (NSColorSampler, macOS 10.15+).
+
+    Ne nécessite pas l'autorisation « Enregistrement de l'écran », contrairement à une capture.
+    """
+
+    picked = Signal(int, int, int)
+    cancelled = Signal()
+    failed = Signal(str)
+
+    def start(self):
+        try:
+            from AppKit import NSColorSampler, NSColorSpace
+
+            self._sampler = NSColorSampler.alloc().init()  # garder une référence
+
+            def handler(color):
+                if color is None:
+                    self.cancelled.emit()
+                    return
+                c = color.colorUsingColorSpace_(NSColorSpace.sRGBColorSpace())
+                self.picked.emit(round(c.redComponent() * 255), round(c.greenComponent() * 255),
+                                 round(c.blueComponent() * 255))
+
+            self._sampler.showSamplerWithSelectionHandler_(handler)
+        except Exception as e:  # noqa: BLE001
+            self.failed.emit(f"{type(e).__name__}: {e}")
 
 
 class PortalPickThread(QThread):

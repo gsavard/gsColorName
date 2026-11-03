@@ -60,10 +60,29 @@ Caractéristiques de l'installateur :
 
 Signature (optionnelle) : ajoutez `SignTool=...` dans `[Setup]` ou signez l'installateur après coup avec `signtool sign`.
 
+## macOS : .app et .dmg
+
+À lancer **sur un Mac** (PyInstaller ne fait pas de compilation croisée).
+Prérequis : Python 3.10+ (python.org ou `brew install python`) et `xcode-select --install`.
+
+```bash
+packaging/macos/build-dmg.sh
+```
+Résultat : `dist/gsColorName.app` et `dist/gsColorName-<version>-macos-<arch>.dmg`.
+L'architecture est celle du Mac de construction : un Mac Apple Silicon donne un paquet `arm64`, un Mac Intel un paquet `x86_64`.
+La CI construit les deux (runners `macos-14` et `macos-15-intel`).
+
+Signature :
+- par défaut, signature **ad hoc** (`codesign -s -`), suffisante pour s'exécuter, mais Gatekeeper demande une confirmation ;
+- avec un compte Apple Developer : `MAC_SIGN_IDENTITY="Developer ID Application: Nom (TEAMID)" packaging/macos/build-dmg.sh`,
+  puis notarisation avec `xcrun notarytool submit dist/*.dmg --wait` et `xcrun stapler staple dist/*.dmg`.
+
+Bundle : identifiant `ca.gsavard.gscolorname`, macOS 11 minimum, compatible Retina et mode sombre (voir `BUNDLE` dans `packaging/gscolorname.spec`).
+
 ## GitHub Actions
 
 Le workflow `.github/workflows/release.yml` s'exécute :
-- à chaque push sur `main` et pour chaque pull request : tests et construction des 3 installateurs (récupérables dans les *Artifacts* du run) ;
+- à chaque push sur `main` et pour chaque pull request : tests et construction des installateurs Windows, .deb, .rpm et .dmg (arm64 et x86_64) (récupérables dans les *Artifacts* du run) ;
 - à chaque **tag `v*`** : en plus, création d'une **Release** GitHub avec les installateurs et `SHA256SUMS.txt`.
 
 Publier une version :

@@ -4,6 +4,9 @@ import os, sys
 
 ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))
 IS_WIN = sys.platform.startswith("win")
+IS_MAC = sys.platform == "darwin"
+sys.path.insert(0, ROOT)
+from version import __version__ as VERSION  # noqa: E402
 
 datas = [
     (os.path.join(ROOT, "data", "colornames.json"), "data"),
@@ -12,7 +15,12 @@ datas = [
     (os.path.join(ROOT, "assets", "gscolorname-512.png"), "assets"),
     (os.path.join(ROOT, "assets", "banner.jpg"), "assets"),
 ]
-hidden = ["jeepney", "jeepney.io.blocking"] if not IS_WIN else []
+if IS_MAC:
+    hidden = ["AppKit", "Foundation", "objc"]
+elif IS_WIN:
+    hidden = []
+else:
+    hidden = ["jeepney", "jeepney.io.blocking"]
 
 # modules Qt inutiles (réduit fortement la taille)
 excludes = [
@@ -39,7 +47,29 @@ exe = EXE(
     exclude_binaries=True,
     name="gscolorname",
     console=False,
-    icon=os.path.join(ROOT, "assets", "gscolorname.ico") if IS_WIN else None,
+    icon=(os.path.join(ROOT, "assets", "gscolorname.ico") if IS_WIN
+          else os.path.join(ROOT, "assets", "gscolorname.icns") if IS_MAC else None),
     version=os.path.join(SPECPATH, "windows", "version_info.txt") if IS_WIN else None,
 )
-coll = COLLECT(exe, a.binaries, a.datas, strip=not IS_WIN, upx=False, name="gscolorname")
+coll = COLLECT(exe, a.binaries, a.datas, strip=not (IS_WIN or IS_MAC), upx=False, name="gscolorname")
+
+if IS_MAC:
+    app = BUNDLE(
+        coll,
+        name="gsColorName.app",
+        icon=os.path.join(ROOT, "assets", "gscolorname.icns"),
+        bundle_identifier="ca.gsavard.gscolorname",
+        version=VERSION,
+        info_plist={
+            "CFBundleName": "gsColorName",
+            "CFBundleDisplayName": "gsColorName",
+            "CFBundleShortVersionString": VERSION,
+            "CFBundleVersion": VERSION,
+            "CFBundleDevelopmentRegion": "fr",
+            "LSApplicationCategoryType": "public.app-category.graphics-design",
+            "LSMinimumSystemVersion": "11.0",
+            "NSHighResolutionCapable": True,
+            "NSRequiresAquaSystemAppearance": False,
+            "NSHumanReadableCopyright": "© 2026 gsavard — MIT",
+        },
+    )

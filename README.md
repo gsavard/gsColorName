@@ -3,7 +3,7 @@
 # gsColorName
 
 **Trouvez le nom d'une couleur et tous ses codes** : HEX, RGB, CMJN, HSL, Lab, décimal, etc.
-Application de bureau (Qt / PySide6) pour **Linux** et **Windows**, avec pipette écran et assistant IA
+Application de bureau (Qt / PySide6) pour **Linux**, **Windows** et **macOS**, avec pipette écran et assistant IA
 (**LM Studio** en local ou **OpenRouter**).
 
 ![Capture d'écran](docs/screenshot-couleur.png)
@@ -59,6 +59,15 @@ gsColorName-1.0.0-win64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLU
 Désinstallation silencieuse : `"%ProgramFiles%\gsColorName\unins000.exe" /VERYSILENT`
 (installation par utilisateur : `%LOCALAPPDATA%\Programs\gsColorName\unins000.exe`).
 
+### macOS 11+ (Apple Silicon ou Intel)
+1. Téléchargez `gsColorName-<version>-macos-arm64.dmg` (Apple M1/M2/M3/M4) ou `…-macos-x86_64.dmg` (Intel).
+2. Ouvrez le `.dmg` et glissez **gsColorName** dans **Applications**.
+3. Au premier lancement, l'app n'est pas notariée par Apple : macOS la bloque.
+   - Ouvrez **Réglages Système → Confidentialité et sécurité**, puis cliquez sur **Ouvrir quand même** ; **ou**
+   - dans le Terminal : `xattr -dr com.apple.quarantine /Applications/gsColorName.app`
+
+Sur macOS, les raccourcis `Ctrl` deviennent `⌘` : `⌘P` pour la pipette.
+
 ### Debian / Ubuntu / Mint (.deb)
 ```bash
 sudo apt install ./gscolorname_1.0.0_amd64.deb
@@ -98,6 +107,7 @@ L'onglet **Couleur** affiche :
 | Environnement | Méthode |
 |---|---|
 | Linux Wayland (Fedora GNOME, KDE Plasma) | Portail système `org.freedesktop.portal.Screenshot.PickColor`, qui affiche le curseur pipette natif |
+| macOS | Pipette native (`NSColorSampler`) : loupe système, aucune autorisation « Enregistrement de l'écran » requise |
 | Linux X11, Windows | Capture plein écran avec loupe : **clic** pour choisir, **flèches** pour ajuster au pixel près, **Entrée** pour valider, **Échap** pour annuler |
 
 Sous Wayland, la capture directe de l'écran est interdite par conception, donc l'application passe toujours
@@ -165,6 +175,8 @@ indiquez `http://<ip>:1234/v1`.
 |---|---|---|
 | Préférences (fournisseur, URL, modèle, historique, dernière couleur) | `~/.config/gsColorName/gsColorName.conf` | Registre `HKCU\Software\gsColorName\gsColorName` |
 
+Sur macOS : `~/Library/Preferences/com.gscolorname.gsColorName.plist`.
+
 Par défaut, la clé OpenRouter n'est **pas** enregistrée. Si vous cochez « Mémoriser la clé API », elle est
 stockée **en clair** dans les préférences ci-dessus.
 
@@ -184,7 +196,8 @@ cd gsColorName
 ```
 Windows : `run.bat`.
 
-Dépendances : `PySide6`, et `jeepney` sous Linux (D-Bus, pour la pipette Wayland).
+Dépendances : `PySide6` ; `jeepney` sous Linux (D-Bus, pour la pipette Wayland) ; `pyobjc-framework-Cocoa` sous macOS (pipette native).
+Sur macOS, `./run.sh` fonctionne aussi.
 
 Tests :
 ```bash
@@ -201,7 +214,8 @@ Voir **[docs/BUILD.md](docs/BUILD.md)** pour le détail. En résumé :
 |---|---|---|
 | `.deb` + `.rpm` | `packaging/linux/build-packages.sh` | `dist/gscolorname_<v>_amd64.deb`, `dist/gscolorname-<v>-1.x86_64.rpm` |
 | Windows | `powershell packaging\windows\build.ps1` | `dist\gsColorName-<v>-win64-setup.exe` |
-| Tout, automatiquement | `git tag v1.0.0 && git push --tags` | GitHub Actions publie une *Release* avec les 3 installateurs et `SHA256SUMS.txt` |
+| macOS | `packaging/macos/build-dmg.sh` | `dist/gsColorName-<v>-macos-<arm64\|x86_64>.dmg` |
+| Tout, automatiquement | `git tag v1.0.0 && git push --tags` | GitHub Actions publie une *Release* avec les installateurs (Windows, .deb, .rpm, 2 × .dmg) et `SHA256SUMS.txt` |
 
 ---
 
@@ -215,11 +229,12 @@ gsColorName/
 ├── llm.py                  # Client LM Studio / OpenRouter (stdlib urllib)
 ├── version.py              # Numéro de version unique
 ├── data/colornames.json    # ~32 000 noms (color-name-list, MIT)
-├── assets/                 # Icône (png 256/512, ico) et bannière / écran de démarrage
+├── assets/                 # Icône (png, ico, icns) et bannière / écran de démarrage
 ├── packaging/
-│   ├── gscolorname.spec    # PyInstaller (commun Linux/Windows)
+│   ├── gscolorname.spec    # PyInstaller (commun Linux/Windows/macOS)
 │   ├── linux/              # build-packages.sh, .desktop, spec RPM
-│   └── windows/            # build.ps1, script Inno Setup, infos de version
+│   ├── windows/            # build.ps1, script Inno Setup, infos de version
+│   └── macos/              # build-dmg.sh (.app + .dmg)
 ├── tests/                  # pytest
 ├── .github/workflows/      # CI : tests + installateurs + Release
 ├── run.sh / run.bat        # Lancement depuis les sources
@@ -233,7 +248,7 @@ gsColorName/
 - La conversion **RGB → CMJN** est mathématique, sans profil ICC. Pour l'impression, validez avec le profil
   de l'imprimeur (FOGRA39, GRACoL, etc.).
 - Il n'y a pas de base Pantone ou RAL intégrée (ces nuanciers sont propriétaires). Seule l'IA en propose des approximations.
-- Les installateurs ne sont pas signés : SmartScreen (Windows) peut afficher un avertissement.
+- Les installateurs ne sont pas signés : SmartScreen (Windows) peut afficher un avertissement, et Gatekeeper (macOS) demande une confirmation (app signée ad hoc, non notariée).
 - Sous Wayland, la pipette nécessite `xdg-desktop-portal` (présent par défaut sous GNOME et KDE).
 
 ---

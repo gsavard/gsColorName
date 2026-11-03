@@ -9,4 +9,5 @@
 - Sélecteur Qt, harmonies, historique.
 - Assistant IA : LM Studio et OpenRouter (liste des modèles, test, nom de couleur, questions libres).
 - Icône et écran de démarrage (bannière), fenêtre « À propos ».
-- Installateurs : Windows (Inno Setup), .deb, .rpm ; CI GitHub Actions avec publication des Releases.
+- Pipette native macOS (NSColorSampler).
+- Installateurs : Windows (Inno Setup), .deb, .rpm, macOS .dmg (arm64 et Intel) ; CI GitHub Actions avec publication des Releases.

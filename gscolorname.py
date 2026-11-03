@@ -407,7 +407,15 @@ class MainWindow(QMainWindow):
 
     def on_eyedropper(self):
         self.b_pick.setEnabled(False)
-        if picker.is_wayland() and picker.portal_available():
+        if picker.mac_sampler_available():
+            self.statusBar().showMessage("Cliquez sur un pixel à l'écran (Échap pour annuler)…")
+            s = picker.MacColorSampler(self)
+            s.picked.connect(self._picked)
+            s.cancelled.connect(self._pick_cancel)
+            s.failed.connect(self._portal_failed)
+            self._mac_sampler = s
+            s.start()
+        elif picker.is_wayland() and picker.portal_available():
             self.statusBar().showMessage("Cliquez sur un pixel à l'écran (portail système)…")
             t = picker.PortalPickThread()
             t.picked.connect(self._picked)
