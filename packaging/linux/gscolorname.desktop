@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=gsColorName
+GenericName=Color name finder
+GenericName[fr]=Nom de couleur
+Comment=Find a color's name and codes (HEX, RGB, CMYK…), eyedropper and AI assistant
+Comment[fr]=Nom et codes d'une couleur (HEX, RGB, CMJN…), pipette et assistant IA
+Exec=gscolorname
+Icon=gscolorname
+Terminal=false
+Categories=Graphics;Utility;Development;
+Keywords=color;colour;couleur;picker;pipette;hex;rgb;cmyk;pantone;
+StartupWMClass=gscolorname
