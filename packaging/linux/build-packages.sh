@@ -15,7 +15,7 @@ mkdir -p dist
 if [ ! -x dist/gscolorname/gscolorname ] || [ "${REBUILD:-1}" = "1" ]; then
   python3 -m venv .venv-build
   .venv-build/bin/pip install -q --upgrade pip
-  .venv-build/bin/pip install -q -r requirements.txt pyinstaller
+  .venv-build/bin/pip install -q -r requirements.txt pyinstaller pillow
   .venv-build/bin/pyinstaller packaging/gscolorname.spec --noconfirm --distpath dist --workpath build
 fi
 
@@ -23,13 +23,21 @@ fi
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 install -d "$STAGE/opt/gscolorname" "$STAGE/usr/bin" "$STAGE/usr/share/applications" \
-  "$STAGE/usr/share/icons/hicolor/256x256/apps" "$STAGE/usr/share/icons/hicolor/scalable/apps" \
   "$STAGE/usr/share/doc/gscolorname"
 cp -a dist/gscolorname/. "$STAGE/opt/gscolorname/"
 ln -s /opt/gscolorname/gscolorname "$STAGE/usr/bin/gscolorname"
 install -m644 packaging/linux/gscolorname.desktop "$STAGE/usr/share/applications/"
-install -m644 assets/gscolorname.png "$STAGE/usr/share/icons/hicolor/256x256/apps/gscolorname.png"
-install -m644 assets/gscolorname.svg "$STAGE/usr/share/icons/hicolor/scalable/apps/gscolorname.svg"
+ICON_SIZES="16 24 32 48 64 128 256 512"
+.venv-build/bin/python - "$STAGE" $ICON_SIZES <<'PY'
+import os, sys
+from PIL import Image
+stage, sizes = sys.argv[1], [int(s) for s in sys.argv[2:]]
+src = Image.open("assets/gscolorname-512.png")
+for s in sizes:
+    d = os.path.join(stage, f"usr/share/icons/hicolor/{s}x{s}/apps")
+    os.makedirs(d, exist_ok=True)
+    src.resize((s, s), Image.LANCZOS).save(os.path.join(d, "gscolorname.png"))
+PY
 install -m644 README.md LICENSE "$STAGE/usr/share/doc/gscolorname/"
 SIZE_KB="$(du -sk "$STAGE" | cut -f1)"
 

@@ -8,12 +8,12 @@ from __future__ import annotations
 import os
 import sys
 
-from PySide6.QtCore import QSettings, Qt, QThread, Signal
+from PySide6.QtCore import QSettings, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QAction, QColor, QFont, QGuiApplication, QIcon, QKeySequence, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QFormLayout, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
-    QMessageBox, QPushButton, QSizePolicy, QSplitter, QStatusBar, QTableWidget, QTableWidgetItem,
+    QMessageBox, QPushButton, QSizePolicy, QSplashScreen, QSplitter, QStatusBar, QTableWidget, QTableWidgetItem,
     QTabWidget, QTextBrowser, QToolButton, QVBoxLayout, QWidget,
 )
 
@@ -119,7 +119,11 @@ class MainWindow(QMainWindow):
         b_paste.clicked.connect(self.on_paste)
         for w in (self.input,):
             bar.addWidget(w, 1)
-        for b in (b_go, self.b_pick, b_dlg, b_paste):
+        b_about = QToolButton()
+        b_about.setText("ℹ")
+        b_about.setToolTip("À propos de gsColorName")
+        b_about.clicked.connect(self.on_about)
+        for b in (b_go, self.b_pick, b_dlg, b_paste, b_about):
             bar.addWidget(b)
         root.addLayout(bar)
 
@@ -380,6 +384,22 @@ class MainWindow(QMainWindow):
             self.input.setText(txt)
             self.on_parse()
 
+    def on_about(self):
+        box = QMessageBox(self)
+        box.setWindowTitle(f"À propos de {APP}")
+        pm = QPixmap(cc.resource_path("assets", "gscolorname-512.png"))
+        if not pm.isNull():
+            box.setIconPixmap(pm.scaled(96, 96, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        box.setTextFormat(Qt.RichText)
+        n = f"{len(self.names):,}".replace(",", " ")
+        box.setText(f"<h3>{APP} {VERSION}</h3>"
+                    "<p>Nom et codes d'une couleur : HEX, RGB, CMJN, HSL, Lab, décimal…<br>"
+                    "Pipette écran et assistant IA (LM Studio / OpenRouter).</p>"
+                    f"<p>{n} noms de couleurs — "
+                    "<a href='https://github.com/meodai/color-name-list'>color-name-list</a> (MIT)</p>"
+                    "<p><a href='https://github.com/gsavard/gsColorName'>github.com/gsavard/gsColorName</a> — Licence MIT</p>")
+        box.exec()
+
     def on_dialog(self):
         q = QColorDialog.getColor(QColor(self.color.hex), self, "Choisir une couleur")
         if q.isValid():
@@ -571,13 +591,30 @@ def main():
     app.setApplicationName(APP)
     app.setApplicationVersion(VERSION)
     app.setDesktopFileName("gscolorname")
-    for name in ("gscolorname.png", "gscolorname.svg"):
-        icon = cc.resource_path("assets", name)
-        if os.path.exists(icon):
-            app.setWindowIcon(QIcon(icon))
-            break
+    icon = QIcon()
+    for name in ("gscolorname-512.png", "gscolorname.png"):
+        path = cc.resource_path("assets", name)
+        if os.path.exists(path):
+            icon.addFile(path)
+    app.setWindowIcon(icon)
+
+    splash = None
+    banner = cc.resource_path("assets", "banner.jpg")
+    if os.path.exists(banner) and "--no-splash" not in sys.argv:
+        pm = QPixmap(banner)
+        pm = pm.scaledToWidth(min(720, pm.width()), Qt.SmoothTransformation)
+        splash = QSplashScreen(pm, Qt.WindowStaysOnTopHint)
+        splash.showMessage(f"gsColorName {VERSION}  —  chargement des noms de couleurs…",
+                           Qt.AlignBottom | Qt.AlignHCenter, QColor("#DDDDDD"))
+        splash.show()
+        app.processEvents()
+
     win = MainWindow()
-    win.show()
+    win.setWindowIcon(icon)
+    if splash:
+        QTimer.singleShot(900, lambda: (win.show(), splash.finish(win)))
+    else:
+        win.show()
     sys.exit(app.exec())
 
 

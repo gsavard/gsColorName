@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.jpg" alt="gsColorName" width="100%"></p>
+
 # gsColorName
 
 **Trouvez le nom d'une couleur et tous ses codes** : HEX, RGB, CMJN, HSL, Lab, décimal, etc.
@@ -69,7 +71,9 @@ sudo dnf install ./gscolorname-1.0.0-1.x86_64.rpm
 
 Après l'installation, **gsColorName** apparaît dans le menu des applications. Vous pouvez aussi le lancer
 avec la commande `gscolorname`.
-Les fichiers sont installés dans `/opt/gscolorname`, avec un lien `/usr/bin/gscolorname`, un fichier `.desktop` et des icônes.
+Les fichiers sont installés dans `/opt/gscolorname`, avec un lien `/usr/bin/gscolorname`, un fichier `.desktop` et des icônes (16 à 512 px).
+
+Option de lancement : `gscolorname --no-splash` désactive l'écran de démarrage.
 
 Désinstallation : `sudo apt remove gscolorname` ou `sudo dnf remove gscolorname`.
 
@@ -211,7 +215,7 @@ gsColorName/
 ├── llm.py                  # Client LM Studio / OpenRouter (stdlib urllib)
 ├── version.py              # Numéro de version unique
 ├── data/colornames.json    # ~32 000 noms (color-name-list, MIT)
-├── assets/                 # Icônes (svg, png, ico)
+├── assets/                 # Icône (png 256/512, ico) et bannière / écran de démarrage
 ├── packaging/
 │   ├── gscolorname.spec    # PyInstaller (commun Linux/Windows)
 │   ├── linux/              # build-packages.sh, .desktop, spec RPM

@@ -9,7 +9,8 @@ datas = [
     (os.path.join(ROOT, "data", "colornames.json"), "data"),
     (os.path.join(ROOT, "data", "LICENSE-color-name-list.txt"), "data"),
     (os.path.join(ROOT, "assets", "gscolorname.png"), "assets"),
-    (os.path.join(ROOT, "assets", "gscolorname.svg"), "assets"),
+    (os.path.join(ROOT, "assets", "gscolorname-512.png"), "assets"),
+    (os.path.join(ROOT, "assets", "banner.jpg"), "assets"),
 ]
 hidden = ["jeepney", "jeepney.io.blocking"] if not IS_WIN else []
 

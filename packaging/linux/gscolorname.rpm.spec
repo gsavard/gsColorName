@@ -37,8 +37,7 @@ tar -C %{buildroot} -xzf %{SOURCE0}
 /opt/gscolorname
 /usr/bin/gscolorname
 /usr/share/applications/gscolorname.desktop
-/usr/share/icons/hicolor/256x256/apps/gscolorname.png
-/usr/share/icons/hicolor/scalable/apps/gscolorname.svg
+/usr/share/icons/hicolor/*/apps/gscolorname.png
 %doc /usr/share/doc/gscolorname
 
 %changelog
